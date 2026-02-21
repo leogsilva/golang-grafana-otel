@@ -17,23 +17,17 @@ processors:
   batch:
 
 exporters:
-  otlphttp/metrics:
-    endpoint: http://prometheus:9090/api/v1/otlp # Sending metrics to prometheus
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write # Sending metrics to prometheus
     tls:
       insecure: true
-  otlphttp:
-    endpoint: http://tempo:4418 # sending data to tempo
+  otlphttp/tempo:
+    endpoint: http://tempo:4418
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp # sending data to loki
     tls:
       insecure: true
-  loki:
-    endpoint: http://loki:3100/loki/api/v1/push # sending data to loki
-    tls:
-      insecure: true
-  logging/metrics:
-    verbosity: detailed
-  logging/traces:
-    verbosity: detailed
-  logging/logs:
+  debug:
     verbosity: detailed
 
 service:
@@ -41,15 +35,15 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp]
+      exporters: [otlphttp/tempo]
       #exporters: [otlphttp/traces,logging/traces]
     metrics:
-      receivers: [otlp, prometheus/collector]
+      receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/metrics]
+      exporters: [prometheusremotewrite]
       #exporters: [otlphttp/metrics,logging/metrics]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [loki]
+      exporters: [otlphttp/loki]
       #exporters: [otlphttp/logs,logging/logs]
